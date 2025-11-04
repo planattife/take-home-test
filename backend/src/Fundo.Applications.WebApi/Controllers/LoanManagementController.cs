@@ -1,7 +1,10 @@
-﻿using Fundo.Applications.WebApi.Models;
+﻿using Fundo.Application.Interfaces;
+using Fundo.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Fundo.Applications.WebApi.Controllers
 {
@@ -9,74 +12,69 @@ namespace Fundo.Applications.WebApi.Controllers
     [Route("/loan")]
     public class LoanManagementController : ControllerBase
     {
-        private static readonly List<Loan> _loans = new();
-        private static int _nextId = 1;
+        private readonly ILoanService _loanService;
 
-        [HttpGet]
-        public ActionResult<IEnumerable<Loan>> Get() {  
-            return Ok(_loans);
+        public LoanManagementController(ILoanService loanService)
+        {
+            _loanService = loanService;
         }
 
-        [HttpGet("{id}")]
-        public ActionResult<Loan> GetById(int id)
-        {
-            var loan = _loans.FirstOrDefault(l => l.Id == id);
-            if (loan == null)
-                return NotFound(new { message = "Loan not found." });
+        [HttpGet]
+        public async Task<IActionResult> Get() {
+            var loans = await _loanService.GetAllAsync();
+            return Ok(loans);
+        }
 
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var loan = await _loanService.GetByIdAsync(id);
+            if (loan == null) return NotFound(new { message = "Loan not found." });
             return Ok(loan);
+        }
+
+        public class CreateLoanRequest
+        {
+            public decimal Amount { get; set; }
+            public string ApplicantName { get; set; } = string.Empty;
         }
 
         [HttpPost]
-        public ActionResult<Loan> Create([FromBody] Loan request)
+        public async Task<IActionResult> Create([FromBody] CreateLoanRequest request)
         {
-            if (request.Amount <= 0)
-                return BadRequest(new { message = "Amount must be greater than zero." });
-
-            if (string.IsNullOrWhiteSpace(request.ApplicantName))
-                return BadRequest(new { message = "Applicant name is required." });
-
-            var loan = new Loan
+            try
             {
-                Id = _nextId++,
-                Amount = request.Amount,
-                CurrentBalance = request.Amount,
-                ApplicantName = request.ApplicantName,
-                Status = "active"
-            };
-
-            _loans.Add(loan);
-            return CreatedAtAction(nameof(GetById), new { id = loan.Id }, loan);
-        }
-
-        [HttpPost("{id}/payment")]
-        public ActionResult<Loan> MakePayment(int id, [FromBody] PaymentRequest payment)
-        {
-            var loan = _loans.FirstOrDefault(l => l.Id == id);
-
-            if (loan == null)
-                return NotFound(new { message = "Loan not found." });
-
-            if (loan.Status == "paid")
-                return BadRequest(new { message = "Loan already paid." });
-
-            if (payment.PaymentAmount <= 0)
-                return BadRequest(new { message = "Payment amount must be greater than zero." });
-
-            if (payment.PaymentAmount > loan.CurrentBalance)
-                return BadRequest(new { message = "Payment exceeds remaining balance." });
-
-            loan.CurrentBalance -= payment.PaymentAmount;
-
-            if (loan.CurrentBalance == 0)
-                loan.Status = "paid";
-
-            return Ok(loan);
+                var created = await _loanService.CreateAsync(request.Amount, request.ApplicantName);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         public class PaymentRequest
         {
             public decimal PaymentAmount { get; set; }
+        }
+
+        [HttpPost("{id}/payment")]
+        public async Task<IActionResult> MakePayment(int id, [FromBody] PaymentRequest request)
+        {
+            try
+            {
+                var updated = await _loanService.MakePaymentAsync(id, request.PaymentAmount);
+                if (updated == null) return NotFound(new { message = "Loan not found." });
+                return Ok(updated);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

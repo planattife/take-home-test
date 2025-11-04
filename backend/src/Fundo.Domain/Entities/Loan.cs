@@ -1,4 +1,4 @@
-namespace Fundo.Applications.WebApi.Models
+﻿namespace Fundo.Domain.Entities
 {
     public class Loan
     {
