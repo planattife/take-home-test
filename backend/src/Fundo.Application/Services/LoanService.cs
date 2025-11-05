@@ -1,53 +1,51 @@
 ﻿using Fundo.Application.Interfaces;
 using Fundo.Domain.Entities;
+using Fundo.Domain.Interfaces;
 
 namespace Fundo.Application.Services
 {
     public class LoanService : ILoanService
     {
-        private static readonly List<Loan> _loans = new();
-        private static int _nextId = 1;
+        private readonly ILoanRepository _loanRepository;
 
-        public Task<Loan> CreateAsync(decimal amount, string applicantName)
+        public LoanService(ILoanRepository loanRepository)
+        {
+            _loanRepository = loanRepository;
+        }
+
+        public async Task<Loan> CreateAsync(decimal amount, string applicantName)
         {
             if (amount <= 0) throw new ArgumentException("Amount must be greater than zero.", nameof(amount));
             if (string.IsNullOrWhiteSpace(applicantName)) throw new ArgumentException("Applicant name is required.", nameof(applicantName));
 
             var loan = new Loan
             {
-                Id = _nextId++,
                 Amount = amount,
                 CurrentBalance = amount,
                 ApplicantName = applicantName.Trim(),
                 Status = "active"
             };
 
-            _loans.Add(loan);
-
-            return Task.FromResult(loan);
+            return await _loanRepository.AddAsync(loan);
         }
 
-        public Task<IEnumerable<Loan>> GetAllAsync()
+        public async Task<IEnumerable<Loan>> GetAllAsync()
         {
-            IEnumerable<Loan> copy;
-            copy = _loans.Select(l => l).ToList();
-            return Task.FromResult(copy);
+            return await _loanRepository.GetAllAsync();
         }
 
-        public Task<Loan?> GetByIdAsync(int id)
+        public async Task<Loan?> GetByIdAsync(int id)
         {
-            Loan? loan;
-            loan = _loans.FirstOrDefault(l => l.Id == id);
-            return Task.FromResult(loan is null ? null : loan);
+            return await _loanRepository.GetByIdAsync(id);
         }
 
-        public Task<Loan?> MakePaymentAsync(int id, decimal paymentAmount)
+        public async Task<Loan?> MakePaymentAsync(int id, decimal paymentAmount)
         {
             if (paymentAmount <= 0) throw new ArgumentException("Payment amount must be greater than zero.", nameof(paymentAmount));
 
-            var loan = _loans.FirstOrDefault(l => l.Id == id);
+            var loan = await _loanRepository.GetByIdAsync(id);
 
-            if (loan == null) return Task.FromResult<Loan?>(null);
+            if (loan == null) return null;
 
             if (loan.Status == "paid")
                 throw new InvalidOperationException("Loan already paid.");
@@ -59,8 +57,9 @@ namespace Fundo.Application.Services
             if (loan.CurrentBalance == 0)
                 loan.Status = "paid";
 
-            return Task.FromResult(loan);
+            await _loanRepository.UpdateAsync(loan);
 
+            return loan;
         }
     }
 }
