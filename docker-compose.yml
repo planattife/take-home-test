@@ -10,6 +10,33 @@ services:
     networks:
       - loan-network
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: loan-backend
+    depends_on:
+      - sqldb
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=sqldb,1433;Database=LoanDB;User Id=sa;Password=WowReallyStrongPassword0001;TrustServerCertificate=True;
+    ports:
+      - "5000:80"
+    networks:
+      - loan-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: loan-frontend
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+    networks:
+      - loan-network
+
 networks:
   loan-network:
     driver: bridge

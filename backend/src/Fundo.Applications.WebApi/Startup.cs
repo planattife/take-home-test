@@ -43,6 +43,12 @@ namespace Fundo.Applications.WebApi
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<LoanDbContext>();
+                db.Database.Migrate();
+            }
+
             app.UseRouting();
             app.UseCors("AllowAngularApp");
             app.UseAuthorization();

@@ -20,7 +20,7 @@ export interface PaginatedResult<T> {
   providedIn: 'root'
 })
 export class LoanService {
-  private apiUrl = 'http://localhost:54089/loan';
+  private apiUrl = 'http://localhost:5000/loan';
 
   constructor(private http: HttpClient) {}
 

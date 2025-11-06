@@ -1,83 +1,77 @@
-# **Take-Home Test: Backend-Focused Full-Stack Developer (.NET C# & Angular)**
+# Loan Management App
 
-## **Objective**
-
-This take-home test evaluates your ability to develop and integrate a .NET Core (C#) backend with an Angular frontend, focusing on API design, database integration, and basic DevOps practices.
-
-## **Instructions**
-
-1.  **Fork the provided repository** before starting the implementation.
-2.  Implement the requested features in your forked repository.
-3.  Once you have completed the implementation, **send the link** to your forked repository via email for review.
-
-## **Task**
-
-You will build a simple **Loan Management System** with a **.NET Core backend (C#)** exposing RESTful APIs and a **basic Angular frontend** consuming these APIs.
+This repository contains a full-stack Loan Management application with:
+- **Frontend:** Angular
+- **Backend:** .NET 6 Web API  
+- **Database:** SQL Server  
 
 ---
 
-## **Requirements**
+## Prerequisites
 
-### **1. Backend (API) - .NET Core**
-
-* Create a **RESTful API** in .NET Core to handle **loan applications**.
-* Implement the following endpoints:
-    * `POST /loans` → Create a new loan.
-    * `GET /loans/{id}` → Retrieve loan details.
-    * `GET /loans` → List all loans.
-    * `POST /loans/{id}/payment` → Deduct from `currentBalance`.
-* Loan example (feel free to improve it):
-
-    ```json
-    {
-        "amount": 1500.00, // Amount requested
-        "currentBalance": 500.00, // Remaining balance
-        "applicantName": "Maria Silva", // User name
-        "status": "active" // Status can be active or paid
-    }
-    ```
-
-* Use **Entity Framework Core** with **SQL Server**.
-* Create seed data to populate the loans (the frontend will consume this).
-* Write **unit/integration tests for the API** (xUnit or NUnit).
-* **Dockerize** the backend and create a **Docker Compose** file.
-* Create a README with setup instructions.
-
-### **2. Frontend - Angular (Simplified UI)**  
-
-Develop a **lightweight Angular app** to interact with the backend
-
-#### **Features:**  
-- A **table** to display a list of existing loans.  
-
-#### **Mockup:**  
-[View Mockup](https://kzmgtjqt0vx63yji8h9l.lite.vusercontent.net/)  
-(*The design doesn’t need to be an exact replica of the mockup—it serves as a reference. Aim to keep it as close as possible.*)  
+Before you start, make sure you have installed:
+- [Docker](https://www.docker.com/get-started)  
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
 ---
 
-## **Bonus (Optional, Not Required)**
+## Running the Application
 
-* **Improve error handling and logging** with structured logs.
-* Implement **authentication**.
-* Create a **GitHub Actions** pipeline for building and testing the backend.
+1. Open a terminal and navigate to the root folder (where the `docker-compose.yml` is located).
+
+2. Build and start the containers:
+
+```bash
+docker-compose up --build
+```
+
+This will:
+- Build the Angular frontend and serve it via Nginx
+- Build the .NET backend and run it in a container
+- Start a SQL Server container with the required database
+
+The first run might take a few minutes while Docker builds all images.
+
+3. Access the application:
+   - **Frontend (Angular):** http://localhost:4200
+   - **Backend API (for testing/debugging):** http://localhost:5000/loan
 
 ---
 
-## **Evaluation Criteria**
+## Docker Compose Setup
 
-✔ **Code quality** (clean architecture, modularization, best practices).
+The setup consists of three main services:
 
-✔ **Functionality** (the API and frontend should work as expected).
+### frontend
+- Serves Angular files via Nginx
+- Exposed on port 4200
 
-✔ **Security considerations** (authentication, validation, secure API handling).
+### backend
+- .NET 6 Web API
+- Exposed on port 5000
+- Connects to SQL Server for data
 
-✔ **Testing coverage** (unit tests for critical backend functions).
+### sqldb
+- SQL Server 2022 container
+- Exposed on port 1433
+- Default SA password set in environment variable
 
-✔ **Basic DevOps implementation** (Docker for backend).
+All services are connected through a Docker network called `loan-network`.
 
 ---
 
-## **Additional Information**
+## Notes
 
-Candidates are encouraged to include a `README.md` file in their repository detailing their implementation approach, any challenges they faced, features they couldn't complete, and any improvements they would make given more time. Ideally, the implementation should be completed within **two days** of starting the test.
+- **CORS:** The backend allows requests from http://localhost:4200 for frontend API calls.
+- **Database:** The backend will automatically apply migrations on startup.
+- **Ports:** If ports 4200 or 5000 are already in use, adjust the `docker-compose.yml` file accordingly.
+
+---
+
+## Stopping the App
+
+To stop and remove the containers:
+
+```bash
+docker-compose down
+```
