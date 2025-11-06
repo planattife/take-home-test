@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Fundo.Application.Services;
+using Fundo.Domain;
 using Fundo.Domain.Entities;
 using Fundo.Domain.Interfaces;
 using Moq;
@@ -133,41 +134,57 @@ namespace Fundo.Services.Tests.Unit.LoanServices
         {
             // Arrange
             var expectedLoans = new List<Loan>
-        {
-            new Loan { Id = 1, Amount = 5000m, CurrentBalance = 5000m, ApplicantName = "Jane Doe", Status = "active" },
-            new Loan { Id = 2, Amount = 10000m, CurrentBalance = 7000m, ApplicantName = "John Doe", Status = "active" },
-            new Loan { Id = 3, Amount = 3000m, CurrentBalance = 0m, ApplicantName = "Pedro", Status = "paid" }
-        };
+            {
+                new Loan { Id = 1, Amount = 5000m, CurrentBalance = 5000m, ApplicantName = "Jane Doe", Status = "active" },
+                new Loan { Id = 2, Amount = 10000m, CurrentBalance = 7000m, ApplicantName = "John Doe", Status = "active" },
+                new Loan { Id = 3, Amount = 3000m, CurrentBalance = 0m, ApplicantName = "Pedro", Status = "paid" }
+            };
+
+            var expectedResponse = new PaginatedResponse<Loan>
+            {
+                Data = expectedLoans,
+                TotalCount = expectedLoans.Count,
+                PageNumber = 1,
+                PageSize = 10
+            };
 
             _mockRepository
-                .Setup(x => x.GetAllAsync())
-                .ReturnsAsync(expectedLoans);
+                .Setup(x => x.GetPagedAsync(1, 10))
+                .ReturnsAsync(expectedResponse);
 
             // Act
-            var result = await _service.GetAllAsync();
+            var result = await _service.GetPagedAsync(1,10);
 
             // Assert
-            result.Should().NotBeNull();
-            result.Should().HaveCount(3);
-            result.Should().BeEquivalentTo(expectedLoans);
-            _mockRepository.Verify(x => x.GetAllAsync(), Times.Once);
+            result.Data.Should().NotBeNull();
+            result.Data.Should().HaveCount(3);
+            result.Data.Should().BeEquivalentTo(expectedLoans);
+            _mockRepository.Verify(x => x.GetPagedAsync(1, 10), Times.Once);
         }
 
         [Fact]
         public async Task GetAllAsync_WithNoLoans_ShouldReturnEmptyList()
         {
+            var emptyResponse = new PaginatedResponse<Loan>
+            {
+                Data = new List<Loan>(),
+                TotalCount = 0,
+                PageNumber = 1,
+                PageSize = 10
+            };
+
             // Arrange
             _mockRepository
-                .Setup(x => x.GetAllAsync())
-                .ReturnsAsync(new List<Loan>());
+                .Setup(x => x.GetPagedAsync(1, 10))
+                .ReturnsAsync(emptyResponse);
 
             // Act
-            var result = await _service.GetAllAsync();
+            var result = await _service.GetPagedAsync(1, 10);
 
             // Assert
-            result.Should().NotBeNull();
-            result.Should().BeEmpty();
-            _mockRepository.Verify(x => x.GetAllAsync(), Times.Once);
+            result.Data.Should().NotBeNull();
+            result.Data.Should().BeEmpty();
+            _mockRepository.Verify(x => x.GetPagedAsync(1, 10), Times.Once);
         }
 
         [Fact]

@@ -1,4 +1,5 @@
 ﻿using Fundo.Application.Interfaces;
+using Fundo.Domain;
 using Fundo.Domain.Entities;
 using Fundo.Domain.Interfaces;
 
@@ -29,9 +30,9 @@ namespace Fundo.Application.Services
             return await _loanRepository.AddAsync(loan);
         }
 
-        public async Task<IEnumerable<Loan>> GetAllAsync()
+        public async Task<PaginatedResponse<Loan>> GetPagedAsync(int pageNumber, int pageSize)
         {
-            return await _loanRepository.GetAllAsync();
+            return await _loanRepository.GetPagedAsync(pageNumber, pageSize);
         }
 
         public async Task<Loan?> GetByIdAsync(int id)

@@ -1,5 +1,6 @@
 ﻿using Fundo.Application.Interfaces;
 using Fundo.Applications.WebApi.Models;
+using Fundo.Domain;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -20,10 +21,28 @@ namespace Fundo.Applications.WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LoanResponse>>> Get() {
-            var loans = await _loanService.GetAllAsync();
-            var loansResponse = loans.Select(x => new LoanResponse { Id = x.Id, Amount = x.Amount, CurrentBalance = x.CurrentBalance, ApplicantName = x.ApplicantName, Status = x.Status });
-            return Ok(loansResponse);
+        public async Task<ActionResult<PaginatedResponse<LoanResponse>>> Get(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10) 
+        {
+            var loans = await _loanService.GetPagedAsync(pageNumber, pageSize);
+
+            var response = new PaginatedResponse<LoanResponse>
+            {
+                Data = loans.Data.Select(x => new LoanResponse
+                {
+                    Id = x.Id,
+                    Amount = x.Amount,
+                    CurrentBalance = x.CurrentBalance,
+                    ApplicantName = x.ApplicantName,
+                    Status = x.Status
+                }),
+                TotalCount = loans.TotalCount,
+                PageNumber = loans.PageNumber,
+                PageSize = loans.PageSize
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("{id:int}")]

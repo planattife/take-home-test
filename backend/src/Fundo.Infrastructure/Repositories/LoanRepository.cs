@@ -1,4 +1,5 @@
-﻿using Fundo.Domain.Entities;
+﻿using Fundo.Domain;
+using Fundo.Domain.Entities;
 using Fundo.Domain.Interfaces;
 using Fundo.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -21,9 +22,22 @@ namespace Fundo.Infrastructure.Repositories
             return loan;
         }
 
-        public async Task<IEnumerable<Loan>> GetAllAsync()
+        public async Task<PaginatedResponse<Loan>> GetPagedAsync(int pageNumber, int pageSize)
         {
-            return await _context.Loans.ToListAsync();
+            var query = _context.Loans.AsQueryable();
+            var totalCount = await query.CountAsync();
+            var data = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginatedResponse<Loan>
+            {
+                Data = data,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
 
         public async Task<Loan?> GetByIdAsync(int id)

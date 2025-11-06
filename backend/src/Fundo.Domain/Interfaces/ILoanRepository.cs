@@ -9,7 +9,7 @@ namespace Fundo.Domain.Interfaces
 {
     public interface ILoanRepository
     {
-        Task<IEnumerable<Loan>> GetAllAsync();
+        Task<PaginatedResponse<Loan>> GetPagedAsync(int pageNumber, int pageSize);
         Task<Loan?> GetByIdAsync(int id);
         Task<Loan> AddAsync(Loan loan);
         Task UpdateAsync(Loan loan);

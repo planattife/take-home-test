@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Loan {
@@ -7,6 +7,13 @@ export interface Loan {
   currentBalance: number;
   applicantName: string;
   status: string;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
 }
 
 @Injectable({
@@ -17,7 +24,11 @@ export class LoanService {
 
   constructor(private http: HttpClient) {}
 
-  getLoans(): Observable<Loan[]> {
-    return this.http.get<Loan[]>(this.apiUrl);
+  getLoans(pageNumber: number, pageSize: number): Observable<PaginatedResult<Loan>> {
+    const params = new HttpParams()
+      .set('pageNumber', pageNumber)
+      .set('pageSize', pageSize);
+
+    return this.http.get<PaginatedResult<Loan>>(this.apiUrl, { params });
   }
 }
