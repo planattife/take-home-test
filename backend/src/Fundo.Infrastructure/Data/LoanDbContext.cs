@@ -22,6 +22,33 @@ namespace Fundo.Infrastructure.Data
                 entity.Property(e => e.CurrentBalance).HasPrecision(18, 2);
                 entity.Property(e => e.Status).IsRequired();
             });
+
+            modelBuilder.Entity<Loan>().HasData(
+                new Loan
+                {
+                    Id = 1,
+                    ApplicantName = "John Doe",
+                    Amount = 10000m,
+                    CurrentBalance = 10000m,
+                    Status = "active"
+                },
+                new Loan
+                {
+                    Id = 2,
+                    ApplicantName = "Jane Doe",
+                    Amount = 5000m,
+                    CurrentBalance = 4500m,
+                    Status = "active"
+                },
+                new Loan
+                {
+                    Id = 3,
+                    ApplicantName = "Michael Scott",
+                    Amount = 15000m,
+                    CurrentBalance = 0m,
+                    Status = "paid"
+                }
+            );
         }
     }
 }
